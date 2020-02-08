@@ -27,15 +27,15 @@ import (
 	v2serial "v2ray.com/core/infra/conf/serial"
 	vinternet "v2ray.com/core/transport/internet"
 
-	"github.com/eycorsican/go-tun2socks/core"
 	"github.com/Tai7sy/go-tun2socks-build/v2ray"
+	"github.com/eycorsican/go-tun2socks/core"
 )
 
 var localDNS = "223.5.5.5:53"
 var err error
 var lwipStack core.LWIPStack
 var v *vcore.Instance
-var isStopped = false
+var isStarted = false
 
 const (
 	v2Assert = "v2ray.location.asset"
@@ -406,14 +406,16 @@ func StartV2Ray(
 
 		// Write IP packets back to TUN.
 		core.RegisterOutputFn(func(data []byte) (int, error) {
-			if !isStopped {
+			if isStarted {
 				packetFlow.WritePacket(data)
 			}
 			return len(data), nil
 		})
 
-		isStopped = false
-		logService.WriteLog("V2Ray started!")
+		isStarted = true
+		if logService != nil {
+			logService.WriteLog("V2Ray started!")
+		}
 		return nil
 	}
 	return errors.New("packetFlow is null")
@@ -436,6 +438,9 @@ func StartV2RayWithVmess(
 	logService LogService,
 	profile *Vmess,
 	assetPath string) error {
+	if isStarted {
+		return nil
+	}
 	if packetFlow != nil {
 		// if dbService != nil {
 		// 	vsession.DefaultDBService = dbService
@@ -492,14 +497,16 @@ func StartV2RayWithVmess(
 
 		// Write IP packets back to TUN.
 		core.RegisterOutputFn(func(data []byte) (int, error) {
-			if !isStopped {
+			if isStarted {
 				packetFlow.WritePacket(data)
 			}
 			return len(data), nil
 		})
 
-		isStopped = false
-		logService.WriteLog("V2Ray Started!")
+		isStarted = true
+		if logService != nil {
+			logService.WriteLog("V2Ray Started!")
+		}
 		return nil
 	}
 	return errors.New("packetFlow is null")
@@ -507,7 +514,10 @@ func StartV2RayWithVmess(
 
 // StopV2Ray stop v2ray
 func StopV2Ray() {
-	isStopped = true
+	if !isStarted {
+		return
+	}
+	isStarted = false
 	if lwipStack != nil {
 		lwipStack.Close()
 		lwipStack = nil
