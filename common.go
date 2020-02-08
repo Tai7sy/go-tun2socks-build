@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/xxf098/go-tun2socks-build/v2ray"
+	"github.com/Tai7sy/go-tun2socks-build/v2ray"
 	vcore "v2ray.com/core"
 	vnet "v2ray.com/core/common/net"
 	vinbound "v2ray.com/core/features/inbound"
